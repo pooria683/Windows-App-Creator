@@ -104,23 +104,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set +e
           {
             echo "### Test failure details"
             for f in test-outputs/*/test-output.txt; do
               [ -f "$f" ] || continue
               os=$(basename "$(dirname "$f")" | sed 's/^test-output-//')
-              if grep -q "Tests  .*failed" "$f"; then
-                echo ""
-                echo "#### $os"
-                echo '```text'
-                tail -c 6000 "$f"
-                echo '```'
-              fi
+              echo ""
+              echo "#### $os"
+              echo '```text'
+              tail -c 6000 "$f"
+              echo '```'
             done
           } > body.md
-          if [ -s body.md ]; then
-            gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/comments" \
-              -f body="$(cat body.md)" > /dev/null && echo "comment posted"
-          else
-            echo "no failing test output found"
-          fi
+          jq -Rs '{body: .}' body.md > payload.json
+          gh api --method POST \
+            "repos/${{ github.repository }}/commits/${{ github.sha }}/comments" \
+            --input payload.json || echo "::warning::could not post commit comment"
+          echo "--- preview ---"
+          head -c 4000 body.md
