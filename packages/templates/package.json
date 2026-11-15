@@ -1,0 +1,36 @@
+{
+  "name": "@winforge/templates",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WinForge project templates (Electron & Tauri) and GitHub Actions workflow templates",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "electron-react-ts",
+    "renderers",
+    "tauri-react-ts",
+    "github-actions"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.72.2",
+    "vitest": "^2.0.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pooria683/Windows-App-Creator.git",
+    "directory": "packages/templates"
+  }
+}

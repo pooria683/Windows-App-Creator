@@ -1,0 +1,47 @@
+# WinForge monorepo CI — lint, typecheck, tests, and a smoke test that
+# scaffolds a project from each template on all three operating systems.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci || npm install
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm test
+      - name: Smoke test — scaffold Electron template
+        shell: bash
+        run: node packages/cli/dist/index.js create /tmp/wf-electron --template electron --ui react --pm npm --non-interactive --no-install
+      - name: Smoke test — scaffold Tauri template
+        shell: bash
+        run: node packages/cli/dist/index.js create /tmp/wf-tauri --template tauri --ui react --pm npm --non-interactive --no-install
+      - name: Verify examples match templates
+        shell: bash
+        run: npm run verify:examples
+      - name: Smoke test — doctor (JSON)
+        shell: bash
+        run: node packages/cli/dist/index.js doctor --json > /dev/null || true

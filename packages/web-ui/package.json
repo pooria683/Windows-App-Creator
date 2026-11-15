@@ -1,0 +1,36 @@
+{
+  "name": "@winforge/web-ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WinForge web UI \u2014 browse templates and preview the exact CLI command for your project",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^9.39.5",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.72.2",
+    "vite": "^5.4.0",
+    "vitest": "^2.0.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pooria683/Windows-App-Creator.git",
+    "directory": "packages/web-ui"
+  }
+}

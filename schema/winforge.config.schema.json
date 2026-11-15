@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/pooria683/Windows-App-Creator/main/schema/winforge.config.schema.json",
+  "title": "WinForge project configuration",
+  "description": "Machine-readable config written by `winforge create` and read by dev/build/package/ci. Code signing is disabled by default.",
+  "type": "object",
+  "required": ["name", "appName", "packageId", "version", "template", "packageManager"],
+  "additionalProperties": true,
+  "properties": {
+    "$schema": { "type": "string", "format": "uri" },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-_]*$",
+      "minLength": 2,
+      "maxLength": 64,
+      "description": "Project slug (directory name, npm package name)."
+    },
+    "appName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "Human-readable display name shown to users."
+    },
+    "packageId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)+$",
+      "maxLength": 128,
+      "description": "Reverse-DNS identifier, e.g. com.example.myapp."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$",
+      "description": "Semantic version without a leading v."
+    },
+    "author": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "description": { "type": "string", "maxLength": 280 },
+    "template": { "enum": ["electron", "tauri"] },
+    "ui": { "enum": ["react", "vue", "svelte", "vanilla"] },
+    "packageManager": { "enum": ["npm", "pnpm", "yarn", "bun"] },
+    "signing": {
+      "type": "object",
+      "description": "Optional code signing. All platforms default to disabled; certificates themselves are never stored here.",
+      "additionalProperties": false,
+      "properties": {
+        "windows": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "certificateFile": {
+              "type": "string",
+              "description": "Path or URL to a .pfx (usually supplied via CI secret instead)."
+            },
+            "certificatePasswordEnv": {
+              "type": "string",
+              "description": "Environment variable holding the .pfx password."
+            }
+          }
+        },
+        "macos": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "identity": {
+              "type": "string",
+              "description": "e.g. Developer ID Application: Name (TEAMID)"
+            },
+            "appleIdEnv": { "type": "string" },
+            "appleTeamIdEnv": { "type": "string" },
+            "applePasswordEnv": { "type": "string" }
+          }
+        },
+        "linux": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "gpgKeyId": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

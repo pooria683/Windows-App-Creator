@@ -1,0 +1,75 @@
+{
+  "name": "@winforge/cli",
+  "version": "0.1.0",
+  "description": "WinForge CLI \u2014 scaffold, develop, build and package Windows desktop apps from macOS/Linux",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "winforge": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./lib/*": "./dist/lib/*.js"
+  },
+  "files": [
+    "dist",
+    "templates",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-templates.mjs",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist templates"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "execa": "^9.3.0",
+    "prompts": "^2.4.0",
+    "semver": "^7.6.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^20.14.12",
+    "@types/prompts": "^2.4.9",
+    "@types/semver": "^7.5.8",
+    "eslint": "^9.39.5",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.72.2",
+    "vitest": "^2.0.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "desktop",
+    "electron",
+    "tauri",
+    "windows",
+    "installer",
+    "nsis",
+    "msi",
+    "scaffold",
+    "cli",
+    "cross-platform"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pooria683/Windows-App-Creator.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/pooria683/Windows-App-Creator#readme",
+  "bugs": {
+    "url": "https://github.com/pooria683/Windows-App-Creator/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
