@@ -76,14 +76,20 @@ jobs:
         run: npm run verify:examples
 
       - name: Smoke test — generated project typechecks and builds
+        shell: bash
         run: |
           cd "${{ runner.temp }}/wf-vue"
           npm install
           npm run build:web
           npm run build:main
 
+      # bash on every runner: the default shell is PowerShell on Windows, where
+      # `> /dev/null` would be a path to a file called null, not a sink.
       - name: Smoke test — doctor (JSON)
-        run: node packages/cli/dist/index.js doctor --json > /dev/null || true
+        shell: bash
+        run: |
+          node packages/cli/dist/index.js doctor --json > doctor.json
+          node -e "const r=require('./doctor.json'); if(r.capabilities.length!==3) process.exit(1); console.log('doctor reported', r.checks.length, 'checks')" 
 
   # When a runner's tests fail, publish the output as a commit comment so the
   # failure is readable from the API/PR without downloading run logs.
