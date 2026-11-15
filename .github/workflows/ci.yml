@@ -84,3 +84,43 @@ jobs:
 
       - name: Smoke test — doctor (JSON)
         run: node packages/cli/dist/index.js doctor --json > /dev/null || true
+
+  # When a runner's tests fail, publish the output as a commit comment so the
+  # failure is readable from the API/PR without downloading run logs.
+  report-failures:
+    name: Report failing test output
+    needs: [verify]
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: test-output-*
+          path: test-outputs
+          merge-multiple: false
+      - name: Post commit comment with failure details
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "### Test failure details"
+            for f in test-outputs/*/test-output.txt; do
+              [ -f "$f" ] || continue
+              os=$(basename "$(dirname "$f")" | sed 's/^test-output-//')
+              if grep -q "Tests  .*failed" "$f"; then
+                echo ""
+                echo "#### $os"
+                echo '```text'
+                tail -c 6000 "$f"
+                echo '```'
+              fi
+            done
+          } > body.md
+          if [ -s body.md ]; then
+            gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/comments" \
+              -f body="$(cat body.md)" > /dev/null && echo "comment posted"
+          else
+            echo "no failing test output found"
+          fi
