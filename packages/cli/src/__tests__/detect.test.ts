@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { detectHost, buildCapabilities, commandExists } from '../lib/detect.js';
 
 describe('detectHost', () => {
@@ -62,9 +65,24 @@ describe('commandExists platform lookup', () => {
     expect(await commandExists('winforge-definitely-not-a-real-binary')).toBe(false);
   });
 
-  it('does not run the tool itself (a failing executable still exists)', async () => {
-    // `false` exists on PATH but exits 1 — a `--version` probe would say "missing".
-    expect(await commandExists('false')).toBe(process.platform !== 'win32');
+  it('finds a shim that would fail if executed', async () => {
+    // A PATH lookup must not care whether the tool runs successfully: this
+    // shim exists but always exits non-zero, so a `--version` probe would
+    // wrongly report it missing. `.cmd` is what Windows resolves; POSIX needs
+    // the executable bit.
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wf-shim-'));
+    const win = process.platform === 'win32';
+    const file = path.join(dir, win ? 'wf-probe.cmd' : 'wf-probe');
+    fs.writeFileSync(file, win ? '@exit /b 3\r\n' : '#!/bin/sh\nexit 3\n');
+    if (!win) fs.chmodSync(file, 0o755);
+    const original = process.env.PATH;
+    process.env.PATH = `${dir}${path.delimiter}${original ?? ''}`;
+    try {
+      expect(await commandExists('wf-probe')).toBe(true);
+    } finally {
+      process.env.PATH = original;
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it('resolves many lookups concurrently in well under a second', async () => {
