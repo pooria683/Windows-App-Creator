@@ -32,24 +32,34 @@ jobs:
       - run: npm ci || npm install
       - run: npm run build
       - run: npm run typecheck
-      # Vitest's own failure annotations are the primary signal. On failure we
-      # also emit the tail of the output as a workflow error annotation, which
-      # is retrievable through the Checks API (useful when run logs are not).
+      # Runs the suite. On failure the output is written to both the job
+      # summary and an artifact, so failures stay diagnosable even when run
+      # logs are not retrievable.
       - name: Run tests
         shell: bash
         run: |
           set -o pipefail
-          if npm test 2>&1 | tee test-output.txt; then
-            exit 0
+          npm test > test-output.txt 2>&1
+          status=$?
+          cat test-output.txt
+          if [ "$status" -ne 0 ]; then
+            {
+              echo "## Test failure (${{ matrix.os }})"
+              echo '```text'
+              tail -c 40000 test-output.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
           fi
-          status=${PIPESTATUS[0]}
-          {
-            echo "::error title=Test failure details (${{ matrix.os }})::"
-            # Escape for a workflow command message: % -> %25, CR dropped,
-            # LF -> %0A so the whole tail stays in one annotation.
-            tail -c 4000 test-output.txt | sed 's/%/%25/g' | tr -d '\r' | awk 'BEGIN{ORS="%0A"} {print}'
-          }
           exit $status
+
+      - name: Upload test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output-${{ matrix.os }}
+          path: test-output.txt
+          if-no-files-found: ignore
+          retention-days: 7
 
       # Smoke tests run in the runner's temp dir, resolved by Node so the same
       # command works on Windows, macOS and Linux (no hardcoded /tmp).
