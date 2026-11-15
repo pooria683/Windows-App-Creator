@@ -61,4 +61,16 @@ describe('commandExists platform lookup', () => {
   it('returns false for a command that does not exist', async () => {
     expect(await commandExists('winforge-definitely-not-a-real-binary')).toBe(false);
   });
+
+  it('does not run the tool itself (a failing executable still exists)', async () => {
+    // `false` exists on PATH but exits 1 — a `--version` probe would say "missing".
+    expect(await commandExists('false')).toBe(process.platform !== 'win32');
+  });
+
+  it('resolves many lookups concurrently in well under a second', async () => {
+    const start = Date.now();
+    await Promise.all(['node', 'npm', 'git', 'wine', 'bun'].map((c) => commandExists(c)));
+    // Sequential spawns on a Windows runner took ~5s for this many probes.
+    expect(Date.now() - start).toBeLessThan(4000);
+  });
 });

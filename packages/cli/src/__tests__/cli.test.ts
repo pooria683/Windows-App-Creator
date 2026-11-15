@@ -180,7 +180,9 @@ describe('CLI binary', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  it('doctor emits JSON describing host and capabilities', async () => {
+  // `doctor` probes nine tools; on a cold Windows runner that used to take
+  // longer than vitest's 5s default and fail the whole suite.
+  it('doctor emits JSON describing host and capabilities', { timeout: 30_000 }, async () => {
     const { stdout } = await cli(['doctor', '--json'], os.tmpdir());
     const report = JSON.parse(stdout);
     expect(report.host.os).toMatch(/windows|macos|linux|unknown/);

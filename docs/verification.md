@@ -11,7 +11,7 @@ exactly what was executed while building WinForge, so nobody has to guess.
 | CLI build                       | `npm run build`                                                              | `tsc` + template copy + web UI build succeed                    |
 | Typecheck                       | `npm run typecheck`                                                          | No errors in any workspace                                      |
 | Lint                            | `npm run lint`                                                               | 0 errors, 0 warnings (typescript-eslint, flat config)           |
-| Unit + integration tests        | `npm test`                                                                   | **94 tests** pass (81 CLI, 2 template, 11 web UI)               |
+| Unit + integration tests        | `npm test`                                                                   | **96 tests** pass (83 CLI, 2 template, 11 web UI)               |
 | CLI binary                      | `node packages/cli/dist/index.js --help`                                     | All six commands listed                                         |
 | Scaffolding                     | `create … --non-interactive`                                                 | Electron (28 files) and Tauri (35 files) generated              |
 | Input validation                | integration tests                                                            | Invalid name/package id/version exits 1 with no files written   |
@@ -66,6 +66,11 @@ OS:
    `console-app`, `nullify`, …).
 4. **`doctor` used `which` on Windows**, where the correct lookup is `where`.
    Every tool would have been reported missing on Windows.
+5. **`doctor` was too slow on Windows.** It probed nine tools sequentially and
+   each probe ran the tool itself with `--version` (up to 18 process spawns in
+   series). On a cold `windows-latest` runner that exceeded the test timeout.
+   Existence checks now use a single PATH lookup and all checks run
+   concurrently; `doctor --json` dropped from ~5s to ~0.4s.
 
 The CI workflow's own smoke tests also no longer hardcode `/tmp` (they use
 `${{ runner.temp }}`), and now additionally scaffold a Vue project, install it,

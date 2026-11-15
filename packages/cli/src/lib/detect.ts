@@ -123,20 +123,15 @@ export function buildCapabilities(
 }
 
 export async function commandExists(cmd: string): Promise<boolean> {
+  // Prefer a PATH lookup: it is one cheap process, and unlike `cmd --version`
+  // it does not run the tool itself (slow on Windows, and some tools open a
+  // window or require a TTY). `where` is the Windows equivalent of `which`.
+  const lookup = process.platform === 'win32' ? 'where' : 'which';
   try {
-    await execa(cmd, ['--version'], { stdio: 'ignore' });
+    await execa(lookup, [cmd], { stdio: 'ignore' });
     return true;
   } catch {
-    // Some tools don't support --version but still exist, so fall back to a
-    // PATH lookup. Windows has `where`; POSIX systems have `which` — using the
-    // wrong one would report every tool as missing.
-    const lookup = process.platform === 'win32' ? 'where' : 'which';
-    try {
-      await execa(lookup, [cmd], { stdio: 'ignore' });
-      return true;
-    } catch {
-      return false;
-    }
+    return false;
   }
 }
 

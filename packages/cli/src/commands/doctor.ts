@@ -52,61 +52,62 @@ export function registerDoctor(program: Command): void {
         template = null;
       }
 
-      const checks: CheckResult[] = [
-        await check(
+      // Checks run concurrently: each one spawns a process, and on Windows
+      // that is slow enough that a sequential doctor (18 spawns) blew the
+      // 5s CLI test timeout.
+      const base: Array<[string, string, boolean, string]> = [
+        [
           'node',
           'Node.js (>=20)',
           true,
           'Install from https://nodejs.org (LTS) or via nvm: `nvm install 20`.',
-        ),
-        await check('npm', 'npm', true, 'Ships with Node.js. Reinstall Node.js if missing.'),
-        await check('git', 'git', true, 'Install from https://git-scm.com/downloads.'),
-        await check(
+        ],
+        ['npm', 'npm', true, 'Ships with Node.js. Reinstall Node.js if missing.'],
+        ['git', 'git', true, 'Install from https://git-scm.com/downloads.'],
+        [
           'pnpm',
           'pnpm (optional)',
           false,
           'Install: `corepack enable && corepack prepare pnpm@latest --activate`.',
-        ),
-        await check(
+        ],
+        [
           'yarn',
           'yarn (optional)',
           false,
           'Install: `corepack enable && corepack prepare yarn@stable --activate`.',
-        ),
-        await check(
-          'bun',
-          'bun (optional)',
-          false,
-          'Install: `curl -fsSL https://bun.sh/install | bash`.',
-        ),
+        ],
+        ['bun', 'bun (optional)', false, 'Install: `curl -fsSL https://bun.sh/install | bash`.'],
       ];
 
+      const extra: Array<[string, string, boolean, string]> = [];
       if (template === 'tauri' || template === null) {
-        checks.push(
-          await check(
+        extra.push(
+          [
             'rustc',
             'Rust (rustc) — required for Tauri',
             template === 'tauri',
             'Install: https://rustup.rs — then `rustup default stable`.',
-          ),
-          await check(
+          ],
+          [
             'cargo',
             'Cargo — required for Tauri',
             template === 'tauri',
             'Ships with rustup (https://rustup.rs).',
-          ),
+          ],
         );
       }
       if (template === 'electron' || template === null) {
-        checks.push(
-          await check(
-            'wine',
-            'Wine (optional, for Windows cross-build)',
-            false,
-            'macOS: `brew install --cask wine-stable`. Linux: `sudo apt install wine` (or your distro equivalent).',
-          ),
-        );
+        extra.push([
+          'wine',
+          'Wine (optional, for Windows cross-build)',
+          false,
+          'macOS: `brew install --cask wine-stable`. Linux: `sudo apt install wine` (or your distro equivalent).',
+        ]);
       }
+
+      const checks = await Promise.all(
+        [...base, ...extra].map(([cmd, name, required, hint]) => check(cmd, name, required, hint)),
+      );
 
       const caps = buildCapabilities(host, template ?? 'electron');
 
