@@ -120,3 +120,17 @@ ls -lh release/
 Then test the installer in a Windows VM (or on a Windows machine) before
 sharing it. An installer that has never been run on Windows is not verified,
 signed or unsigned.
+
+## Installer identity (why `upgradeCode` matters)
+
+Windows Installer identifies an application by a **GUID**, not by its name. For
+Tauri projects winforge writes `bundle.windows.wix.upgradeCode` from the
+`packageId` as an RFC 4122 version-5 (name-based) UUID:
+
+- the same `packageId` always produces the same GUID, so version 1.2 upgrades
+  over 1.1 instead of sitting next to it;
+- different `packageId` values produce different GUIDs, so two winforge apps
+  never look like the same product to Windows.
+
+If you change `packageId` after your first release, treat it as a new product:
+the old install will not be replaced.

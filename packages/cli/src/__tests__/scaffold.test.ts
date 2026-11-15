@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { scaffoldProject, renderTokens, scriptPrefix } from '../lib/scaffold.js';
+import { scaffoldProject, renderTokens, scriptPrefix, wixUpgradeCode } from '../lib/scaffold.js';
 import type { ProjectConfig } from '../lib/validate.js';
 
 const cfg: ProjectConfig = {
@@ -109,6 +109,37 @@ describe('platform-independent file reporting', () => {
       expect(files).toContain('src-tauri/capabilities/default.json');
       expect(files).toContain('src/renderer/src/App.tsx');
       expect(files).toContain('winforge.config.json');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('WiX upgradeCode (Windows Installer identity)', () => {
+  it('is deterministic for a package id so upgrades replace the old version', () => {
+    expect(wixUpgradeCode('com.acme.alpha')).toBe(wixUpgradeCode('com.acme.alpha'));
+  });
+
+  it('differs between package ids so two apps are not treated as one', () => {
+    const codes = new Set(
+      Array.from({ length: 200 }, (_, i) => wixUpgradeCode(`com.acme.app${i}`)),
+    );
+    expect(codes.size).toBe(200);
+  });
+
+  it('is a valid RFC 4122 v5 UUID', () => {
+    expect(wixUpgradeCode('com.acme.alpha')).toMatch(
+      /^[0-9A-F]{8}-[0-9A-F]{4}-5[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/,
+    );
+  });
+
+  it('is written into the generated Tauri config', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'winforge-wix-'));
+    try {
+      const dir = path.join(tmp, 'proj');
+      scaffoldProject({ ...cfg, template: 'tauri', packageId: 'com.acme.wix' }, dir);
+      const conf = JSON.parse(fs.readFileSync(path.join(dir, 'src-tauri/tauri.conf.json'), 'utf8'));
+      expect(conf.bundle.windows.wix.upgradeCode).toBe(wixUpgradeCode('com.acme.wix'));
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }

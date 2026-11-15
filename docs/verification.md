@@ -11,7 +11,7 @@ exactly what was executed while building WinForge, so nobody has to guess.
 | CLI build                       | `npm run build`                                                              | `tsc` + template copy + web UI build succeed                    |
 | Typecheck                       | `npm run typecheck`                                                          | No errors in any workspace                                      |
 | Lint                            | `npm run lint`                                                               | 0 errors, 0 warnings (typescript-eslint, flat config)           |
-| Unit + integration tests        | `npm test`                                                                   | **96 tests** pass (83 CLI, 2 template, 11 web UI)               |
+| Unit + integration tests        | `npm test`                                                                   | **100 tests** pass (87 CLI, 2 template, 11 web UI)              |
 | CLI binary                      | `node packages/cli/dist/index.js --help`                                     | All six commands listed                                         |
 | Scaffolding                     | `create … --non-interactive`                                                 | Electron (28 files) and Tauri (35 files) generated              |
 | Input validation                | integration tests                                                            | Invalid name/package id/version exits 1 with no files written   |

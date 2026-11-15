@@ -7,6 +7,7 @@
  * Token replacement is intentionally simple and auditable: no eval, no
  * arbitrary code execution from template files.
  */
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -77,7 +78,29 @@ export function buildTokens(cfg: ProjectConfig): Record<string, string> {
     // Used in generated READMEs so instructions match the chosen package manager.
     RUN_SCRIPT_PREFIX: scriptPrefix(cfg.packageManager),
     YEAR: String(new Date().getFullYear()),
+    WIX_UPGRADE_CODE: wixUpgradeCode(cfg.packageId),
   };
+}
+
+/**
+ * A stable-per-app, unique-across-apps GUID for Tauri's WiX `upgradeCode`.
+ *
+ * Windows Installer identifies an app by this GUID, not by its name: shipping
+ * the same value in two different apps makes Windows treat one as an upgrade
+ * of the other. It must also stay constant across releases of *one* app, so it
+ * is derived deterministically from the package id (a name-based UUIDv5) rather
+ * than generated randomly on each scaffold.
+ */
+export function wixUpgradeCode(packageId: string): string {
+  // Namespace: DNS (6ba7b810-9dad-11d1-80b4-00c04fd430c8), per RFC 4122.
+  const ns = Buffer.from('6ba7b8109dad11d180b400c04fd430c8', 'hex');
+  const name = Buffer.from(`winforge:${packageId}`, 'utf8');
+  const hash = crypto.createHash('sha1').update(ns).update(name).digest();
+  const bytes = Buffer.from(hash.subarray(0, 16));
+  bytes[6] = (bytes[6]! & 0x0f) | 0x50; // version 5
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80; // RFC 4122 variant
+  const hex = bytes.toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`.toUpperCase();
 }
 
 const BINARY_EXTS = new Set([

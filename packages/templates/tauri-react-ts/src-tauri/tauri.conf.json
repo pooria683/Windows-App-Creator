@@ -47,7 +47,7 @@
         "displayLanguageSelector": false
       },
       "wix": {
-        "upgradeCode": "b3bc1c8e-6f0a-4f0d-9c8e-2b7a5d6f1c34",
+        "upgradeCode": "{{WIX_UPGRADE_CODE}}",
         "language": "en-US"
       }
     },
