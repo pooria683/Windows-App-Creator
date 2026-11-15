@@ -86,13 +86,15 @@ const TAURI_ARTIFACTS = 'src-tauri/target/release/bundle/**/*';
 function electronTarget(os: 'windows' | 'macos' | 'linux', msi: boolean): string {
   const base = `npx electron-builder --${os === 'windows' ? 'win' : os === 'macos' ? 'mac' : 'linux'}`;
   if (os === 'windows') return `${base} nsis portable${msi ? ' msi' : ''} --publish never`;
-  if (os === 'macos') return `${base} dmg zip --publish never`;
+  // macos-latest is arm64; build both arches so Intel Macs get a build too.
+  if (os === 'macos') return `${base} dmg zip --x64 --arm64 --publish never`;
   return `${base} AppImage deb rpm --publish never`;
 }
 
 function tauriTarget(os: 'windows' | 'macos' | 'linux', msi: boolean): string {
   if (os === 'windows') return `tauri build --bundles nsis${msi ? ',msi' : ''}`;
-  if (os === 'macos') return 'tauri build --bundles dmg';
+  // universal binary covers both Apple Silicon and Intel Macs.
+  if (os === 'macos') return 'tauri build --target universal-apple-darwin --bundles dmg';
   return 'tauri build --bundles appimage,deb,rpm';
 }
 
@@ -160,6 +162,10 @@ function renderJob(spec: OsJobSpec, opts: WorkflowOptions): string {
     lines.push('        uses: Swatinem/rust-cache@v2');
     lines.push('        with:');
     lines.push('          workspaces: src-tauri');
+    if (spec.os === 'macos') {
+      lines.push('      - name: Add Intel target (universal macOS build)');
+      lines.push('        run: rustup target add x86_64-apple-darwin aarch64-apple-darwin');
+    }
     if (spec.os === 'linux') {
       lines.push('      - name: Install Tauri Linux dependencies');
       lines.push('        run: |');
@@ -294,7 +300,7 @@ jobs:
 # reproducible — and signing/notarization only works on the matching OS.
 `;
 
-  return header + '\n' + jobs + release + '\n' + trailer;
+  return header + jobs + release + '\n' + trailer;
 }
 
 interface CiCommandOptions {

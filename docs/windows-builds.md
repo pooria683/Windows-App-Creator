@@ -71,7 +71,10 @@ winforge ci --signing       # wire signing secrets (still off by default)
 
 - `build-windows` on `windows-latest`: `electron-builder --win nsis portable`
   (plus `msi` with `--msi`) or `tauri build --bundles nsis,msi`.
-- `build-macos` on `macos-latest`: `.dmg` (+ `.zip` for Electron).
+- `build-macos` on `macos-latest`: `.dmg` (+ `.zip` for Electron). Both
+  architectures are built (electron-builder `--x64 --arm64`; Tauri
+  `--target universal-apple-darwin`), so Intel Macs are covered even though
+  the runner is Apple Silicon.
 - `build-linux` on `ubuntu-latest`: AppImage, `.deb`, `.rpm`; Tauri jobs also
   install `libwebkit2gtk-4.1-dev`, `libappindicator3-dev`, `librsvg2-dev`,
   `patchelf` and `rpm`.

@@ -21,7 +21,7 @@ describe('renderWorkflow', () => {
 
   it('declares a jobs mapping and per-OS jobs', () => {
     const yml = renderWorkflow(base);
-    expect(yml).toMatch(/^jobs:$/m);
+    expect(yml).toMatch(/^jobs:\n {2}build-windows:$/m);
     expect(yml).toContain('build-windows:');
     expect(yml).toContain('build-macos:');
     expect(yml).toContain('build-linux:');
@@ -30,7 +30,7 @@ describe('renderWorkflow', () => {
   it('builds Electron with electron-builder native flags', () => {
     const yml = renderWorkflow(base);
     expect(yml).toContain('electron-builder --win nsis portable');
-    expect(yml).toContain('electron-builder --mac dmg zip');
+    expect(yml).toContain('electron-builder --mac dmg zip --x64 --arm64');
     expect(yml).toContain('electron-builder --linux AppImage deb rpm');
   });
 
@@ -42,7 +42,7 @@ describe('renderWorkflow', () => {
   it('builds Tauri with per-OS bundles and installs Rust', () => {
     const yml = renderWorkflow({ ...base, template: 'tauri' });
     expect(yml).toContain('npx tauri build --bundles nsis');
-    expect(yml).toContain('npx tauri build --bundles dmg');
+    expect(yml).toContain('npx tauri build --target universal-apple-darwin --bundles dmg');
     expect(yml).toContain('npx tauri build --bundles appimage,deb,rpm');
     expect(yml).toContain('rust-toolchain@stable');
     // Linux-only system deps must not leak into the Windows job.

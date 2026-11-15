@@ -30,7 +30,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   build-windows:
     name: Windows (.exe installer / portable)
     runs-on: windows-latest
@@ -73,8 +72,10 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+      - name: Add Intel target (universal macOS build)
+        run: rustup target add x86_64-apple-darwin aarch64-apple-darwin
       - name: Build + bundle (macos)
-        run: npx tauri build --bundles dmg
+        run: npx tauri build --target universal-apple-darwin --bundles dmg
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

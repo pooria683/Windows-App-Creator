@@ -30,7 +30,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   build-windows:
     name: Windows (.exe installer / portable)
     runs-on: windows-latest
@@ -81,7 +80,7 @@ jobs:
           npm run build:web
           npm run build:main
       - name: Package (macos)
-        run: npx electron-builder --mac dmg zip --publish never
+        run: npx electron-builder --mac dmg zip --x64 --arm64 --publish never
       - name: Generate checksums
         shell: bash
         run: |
