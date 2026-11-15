@@ -32,21 +32,25 @@ jobs:
       - run: npm ci || npm install
       - run: npm run build
       - run: npm run typecheck
-      # Test output goes to the job summary so failures are readable from the
-      # Actions UI / API without downloading logs.
+      # Vitest's own failure annotations are the primary signal. On failure we
+      # also emit the tail of the output as a workflow error annotation, which
+      # is retrievable through the Checks API (useful when run logs are not).
       - name: Run tests
         shell: bash
         run: |
           set -o pipefail
-          npm test 2>&1 | tee test-output.txt
+          if npm test 2>&1 | tee test-output.txt; then
+            exit 0
+          fi
           status=${PIPESTATUS[0]}
           {
-            echo "## Test output (${{ matrix.os }})"
-            echo '```'
-            tail -c 60000 test-output.txt
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error title=Test failure details (${{ matrix.os }})::"
+            # Escape for a workflow command message: % -> %25, CR dropped,
+            # LF -> %0A so the whole tail stays in one annotation.
+            tail -c 4000 test-output.txt | sed 's/%/%25/g' | tr -d '\r' | awk 'BEGIN{ORS="%0A"} {print}'
+          }
           exit $status
+
       # Smoke tests run in the runner's temp dir, resolved by Node so the same
       # command works on Windows, macOS and Linux (no hardcoded /tmp).
       - name: Smoke test — scaffold Electron template
