@@ -1,0 +1,50 @@
+# TEMPORARY diagnostic workflow (removed once the Windows failure is fixed).
+# Runs the suite on windows-latest and posts the tail of the output as a PR
+# comment, because run logs are not retrievable in this environment.
+name: Debug Windows
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: PR number to comment on
+        required: true
+        default: '1'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  debug:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci || npm install
+      - run: npm run build
+      - name: Run tests (capture)
+        shell: bash
+        run: |
+          set +e
+          npm test > out.txt 2>&1
+          echo "EXIT=$?" >> out.txt
+          exit 0
+      - name: Post results as PR comment
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "### Windows test output"
+            echo '```text'
+            tail -c 12000 out.txt
+            echo '```'
+          } > body.md
+          gh pr comment "${{ inputs.pr }}" --body-file body.md --repo "${{ github.repository }}"
+      - name: Fail if tests failed
+        shell: bash
+        run: grep -q "EXIT=0" out.txt
