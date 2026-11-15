@@ -3,6 +3,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { scaffoldProject } from '../lib/scaffold.js';
+import {
+  patchIndexHtml,
+  patchPackageJson,
+  patchViteConfig,
+} from '../lib/renderers.js';
 import type { ProjectConfig } from '../lib/validate.js';
 
 const base: ProjectConfig = {
@@ -97,4 +102,62 @@ describe('renderer overlays', () => {
       expect(() => JSON.parse(read(path.join(dir, 'tsconfig.json')))).not.toThrow();
     }
   });
+});
+
+describe('CRLF checkouts (Windows runners, core.autocrlf=true)', () => {
+  let tmp: string;
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'winforge-crlf-'));
+  });
+  afterEach(() => {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  /** Convert every text file in a scaffolded project to CRLF, like Git on Windows. */
+  function toCrlf(dir: string): void {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        toCrlf(full);
+      } else if (entry.isFile() && /\.(ts|tsx|html|json|css|md|js|cjs)$/.test(entry.name)) {
+        const text = fs.readFileSync(full, 'utf8').replace(/\r\n/g, '\n').replace(/\n/g, '\r\n');
+        fs.writeFileSync(full, text, 'utf8');
+      }
+    }
+  }
+
+  it.each(['vue', 'svelte', 'vanilla'] as const)(
+    'applies the %s overlay to CRLF sources',
+    (ui) => {
+      const dir = path.join(tmp, ui);
+      // Scaffold from a CRLF-converted copy of the templates, then re-scaffold
+      // the same directory so the overlay patching runs against CRLF files.
+      scaffoldProject({ ...base, ui: 'react' }, dir);
+      toCrlf(dir);
+
+      const cfgPath = path.join(dir, 'winforge.config.json');
+      const vitePath = path.join(dir, 'vite.config.ts');
+      expect(fs.readFileSync(cfgPath, 'utf8')).toContain('\r\n');
+
+      // Apply the overlay the same way scaffoldProject does.
+      patchPackageJson(dir, ui);
+      patchIndexHtml(dir, ui);
+      patchViteConfig(dir, ui);
+
+      const vite = fs.readFileSync(vitePath, 'utf8');
+      if (ui === 'vanilla') {
+        expect(vite).not.toContain('plugin-react');
+        expect(vite).not.toContain('plugins: [react()]');
+      } else {
+        expect(vite).toContain(`${ui}()`);
+        expect(vite).not.toContain('plugins: [react()]');
+      }
+      // Line endings are preserved, not mixed.
+      expect(vite).toContain('\r\n');
+      expect(vite.replace(/\r\n/g, '')).not.toContain('\n');
+      expect(fs.readFileSync(path.join(dir, 'src/renderer/index.html'), 'utf8')).toContain(
+        '/src/main.ts',
+      );
+    },
+  );
 });

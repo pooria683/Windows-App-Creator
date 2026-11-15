@@ -33,15 +33,26 @@ jobs:
       - run: npm run build
       - run: npm run typecheck
       - run: npm test
+      # Smoke tests run in the runner's temp dir, resolved by Node so the same
+      # command works on Windows, macOS and Linux (no hardcoded /tmp).
       - name: Smoke test — scaffold Electron template
-        shell: bash
-        run: node packages/cli/dist/index.js create /tmp/wf-electron --template electron --ui react --pm npm --non-interactive --no-install
+        run: node packages/cli/dist/index.js create "${{ runner.temp }}/wf-electron" --template electron --ui react --pm npm --non-interactive --no-install
+
       - name: Smoke test — scaffold Tauri template
-        shell: bash
-        run: node packages/cli/dist/index.js create /tmp/wf-tauri --template tauri --ui react --pm npm --non-interactive --no-install
+        run: node packages/cli/dist/index.js create "${{ runner.temp }}/wf-tauri" --template tauri --ui react --pm npm --non-interactive --no-install
+
+      - name: Smoke test — scaffold a Vue renderer overlay
+        run: node packages/cli/dist/index.js create "${{ runner.temp }}/wf-vue" --template electron --ui vue --pm npm --non-interactive --no-install
+
       - name: Verify examples match templates
-        shell: bash
         run: npm run verify:examples
+
+      - name: Smoke test — generated project typechecks and builds
+        run: |
+          cd "${{ runner.temp }}/wf-vue"
+          npm install
+          npm run build:web
+          npm run build:main
+
       - name: Smoke test — doctor (JSON)
-        shell: bash
         run: node packages/cli/dist/index.js doctor --json > /dev/null || true

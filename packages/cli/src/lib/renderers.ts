@@ -16,6 +16,24 @@ import type { UiFramework } from './validate.js';
 
 type Json = Record<string, unknown>;
 
+/**
+ * Apply literal replacements to a text file regardless of its line endings.
+ *
+ * Templates are checked out with LF via .gitattributes, but a user's clone
+ * (or a Windows checkout with core.autocrlf=true) may hand us CRLF. Exact
+ * string patching that includes "\n" would then silently match nothing, so we
+ * restore the file's original line endings after patching.
+ */
+function patchTextFile(filePath: string, edits: Array<[search: string, replace: string]>): void {
+  const raw = fs.readFileSync(filePath, 'utf8');
+  const usesCrlf = raw.includes('\r\n');
+  let text = usesCrlf ? raw.replace(/\r\n/g, '\n') : raw;
+  for (const [search, replace] of edits) {
+    text = text.replaceAll(search, replace);
+  }
+  fs.writeFileSync(filePath, usesCrlf ? text.replace(/\n/g, '\r\n') : text, 'utf8');
+}
+
 export interface RendererOverlayPatch {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -114,10 +132,10 @@ export function patchIndexHtml(destDir: string, ui: UiFramework): void {
   if (ui === 'react') return;
   const htmlPath = path.join(destDir, 'src/renderer/index.html');
   if (!fs.existsSync(htmlPath)) return;
-  const html = fs
-    .readFileSync(htmlPath, 'utf8')
-    .replace(/(<script[^>]*src=")[^"]*(")/, `$1/src/main.ts$2`);
-  fs.writeFileSync(htmlPath, html, 'utf8');
+  const raw = fs.readFileSync(htmlPath, 'utf8');
+  const usesCrlf = raw.includes('\r\n');
+  const patched = raw.replace(/(<script[^>]*src=")[^"]*(")/, `$1/src/main.ts$2`);
+  fs.writeFileSync(htmlPath, usesCrlf ? patched.replace(/\n/g, '\r\n') : patched, 'utf8');
 }
 
 /** Apply dependency/script/removal patches to the scaffolded package.json. */
@@ -161,26 +179,25 @@ export function patchViteConfig(destDir: string, ui: UiFramework): void {
   const cfgPath = path.join(destDir, 'vite.config.ts');
   if (!fs.existsSync(cfgPath)) return;
 
-  let cfg = fs.readFileSync(cfgPath, 'utf8');
-  cfg = cfg.replace(
-    "import react from '@vitejs/plugin-react';",
-    overlay.vitePluginImport ?? "import react from '@vitejs/plugin-react';",
-  );
+  const edits: Array<[string, string]> = [];
   if (overlay.vitePlugins) {
-    cfg = cfg.replace('plugins: [react()]', `plugins: [${overlay.vitePlugins}]`);
+    edits.push([
+      "import react from '@vitejs/plugin-react';",
+      overlay.vitePluginImport ?? "import react from '@vitejs/plugin-react';",
+    ]);
+    edits.push(['plugins: [react()]', `plugins: [${overlay.vitePlugins}]`]);
   } else {
-    // Vanilla TS needs no framework plugin — drop the line cleanly.
-    cfg = cfg.replace("import react from '@vitejs/plugin-react';\n", '');
-    cfg = cfg.replace('  plugins: [react()],\n', '');
+    // Vanilla TS needs no framework plugin — drop the import and plugin line.
+    edits.push(["import react from '@vitejs/plugin-react';\n", '']);
+    edits.push(['  plugins: [react()],\n', '']);
   }
-  // Svelte single-file components need the svelte extension in the build.
   if (ui === 'svelte') {
-    cfg = cfg.replace(
+    edits.push([
       'build: {',
       'build: {\n    // .svelte components are handled by @sveltejs/vite-plugin-svelte.\n',
-    );
+    ]);
   }
-  fs.writeFileSync(cfgPath, cfg, 'utf8');
+  patchTextFile(cfgPath, edits);
 }
 
 /** Extend tsconfig include patterns for .vue/.svelte files. */

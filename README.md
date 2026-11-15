@@ -281,7 +281,7 @@ Architecture diagram and rationale: [`docs/architecture.md`](docs/architecture.m
 
 ## Verified vs. untested
 
-Everything in this repo is typechecked, linted and covered by **86 automated
+Everything in this repo is typechecked, linted and covered by **90 automated
 tests** (CLI unit + binary integration + interactive prompt flows + web UI).
 Both example apps install, typecheck and bundle; all four UI frameworks build.
 

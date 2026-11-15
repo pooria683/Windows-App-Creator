@@ -123,8 +123,10 @@ export function scaffoldProject(
   const walk = (src: string, rel: string): void => {
     for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
       const srcPath = path.join(src, entry.name);
-      const relPath = rel ? path.join(rel, entry.name) : entry.name;
-      const destPath = path.join(destDir, relPath);
+      // Relative paths are always reported (and stored) POSIX-style so the
+      // returned file list is identical on Windows, macOS and Linux.
+      const relPath = rel ? `${rel}/${entry.name}` : entry.name;
+      const destPath = path.join(destDir, ...relPath.split('/'));
       if (entry.isDirectory()) {
         fs.mkdirSync(destPath, { recursive: true });
         walk(srcPath, relPath);

@@ -95,3 +95,22 @@ describe('script prefix tokens', () => {
     fs.rmSync(tmp, { recursive: true, force: true });
   });
 });
+
+describe('platform-independent file reporting', () => {
+  it('reports nested paths POSIX-style (same on Windows and Unix)', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'winforge-posix-'));
+    try {
+      const files = scaffoldProject({ ...cfg, template: 'tauri' }, path.join(tmp, 'proj'));
+      // Every reported path must use "/" — never a backslash separator.
+      for (const f of files) {
+        expect(f).not.toContain('\\');
+      }
+      expect(files).toContain('src-tauri/tauri.conf.json');
+      expect(files).toContain('src-tauri/capabilities/default.json');
+      expect(files).toContain('src/renderer/src/App.tsx');
+      expect(files).toContain('winforge.config.json');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});
