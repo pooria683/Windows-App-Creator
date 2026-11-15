@@ -11,7 +11,7 @@ exactly what was executed while building WinForge, so nobody has to guess.
 | CLI build                       | `npm run build`                                                              | `tsc` + template copy + web UI build succeed                    |
 | Typecheck                       | `npm run typecheck`                                                          | No errors in any workspace                                      |
 | Lint                            | `npm run lint`                                                               | 0 errors, 0 warnings (typescript-eslint, flat config)           |
-| Unit + integration tests        | `npm test`                                                                   | **90 tests** pass (77 CLI, 2 template, 11 web UI)               |
+| Unit + integration tests        | `npm test`                                                                   | **94 tests** pass (81 CLI, 2 template, 11 web UI)               |
 | CLI binary                      | `node packages/cli/dist/index.js --help`                                     | All six commands listed                                         |
 | Scaffolding                     | `create … --non-interactive`                                                 | Electron (28 files) and Tauri (35 files) generated              |
 | Input validation                | integration tests                                                            | Invalid name/package id/version exits 1 with no files written   |
@@ -43,9 +43,9 @@ test builds. Verify them on the target OS, and sign them, before distributing.
 
 ## Windows-specific fixes found by CI
 
-The first CI run failed on `windows-latest` and passed on Ubuntu/macOS. Two real
-cross-platform bugs were found and fixed (both now covered by tests that run on
-every OS):
+CI failed on `windows-latest` while passing on Ubuntu/macOS, which surfaced four
+real cross-platform bugs. All are fixed and covered by tests that run on every
+OS:
 
 1. **CRLF checkouts broke string patching.** Without `.gitattributes`, the
    Windows runner checks out with `core.autocrlf=true`, so `vite.config.ts`
@@ -60,6 +60,12 @@ every OS):
    backslash separator instead of `src-tauri/tauri.conf.json`. Fixed by
    composing POSIX-style relative paths while still using `path.join` for the
    real filesystem path.
+3. **Windows reserved device names were accepted.** `nul`, `con`, `com1` … are
+   valid npm slugs but impossible to create on Windows. `validateAppName()`
+   now rejects CON/PRN/AUX/NUL/COM1-9/LPT1-9 (while still allowing
+   `console-app`, `nullify`, …).
+4. **`doctor` used `which` on Windows**, where the correct lookup is `where`.
+   Every tool would have been reported missing on Windows.
 
 The CI workflow's own smoke tests also no longer hardcode `/tmp` (they use
 `${{ runner.temp }}`), and now additionally scaffold a Vue project, install it,

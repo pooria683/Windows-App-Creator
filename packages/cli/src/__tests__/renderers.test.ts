@@ -3,11 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { scaffoldProject } from '../lib/scaffold.js';
-import {
-  patchIndexHtml,
-  patchPackageJson,
-  patchViteConfig,
-} from '../lib/renderers.js';
+import { patchIndexHtml, patchPackageJson, patchViteConfig } from '../lib/renderers.js';
 import type { ProjectConfig } from '../lib/validate.js';
 
 const base: ProjectConfig = {
@@ -126,38 +122,35 @@ describe('CRLF checkouts (Windows runners, core.autocrlf=true)', () => {
     }
   }
 
-  it.each(['vue', 'svelte', 'vanilla'] as const)(
-    'applies the %s overlay to CRLF sources',
-    (ui) => {
-      const dir = path.join(tmp, ui);
-      // Scaffold from a CRLF-converted copy of the templates, then re-scaffold
-      // the same directory so the overlay patching runs against CRLF files.
-      scaffoldProject({ ...base, ui: 'react' }, dir);
-      toCrlf(dir);
+  it.each(['vue', 'svelte', 'vanilla'] as const)('applies the %s overlay to CRLF sources', (ui) => {
+    const dir = path.join(tmp, ui);
+    // Scaffold from a CRLF-converted copy of the templates, then re-scaffold
+    // the same directory so the overlay patching runs against CRLF files.
+    scaffoldProject({ ...base, ui: 'react' }, dir);
+    toCrlf(dir);
 
-      const cfgPath = path.join(dir, 'winforge.config.json');
-      const vitePath = path.join(dir, 'vite.config.ts');
-      expect(fs.readFileSync(cfgPath, 'utf8')).toContain('\r\n');
+    const cfgPath = path.join(dir, 'winforge.config.json');
+    const vitePath = path.join(dir, 'vite.config.ts');
+    expect(fs.readFileSync(cfgPath, 'utf8')).toContain('\r\n');
 
-      // Apply the overlay the same way scaffoldProject does.
-      patchPackageJson(dir, ui);
-      patchIndexHtml(dir, ui);
-      patchViteConfig(dir, ui);
+    // Apply the overlay the same way scaffoldProject does.
+    patchPackageJson(dir, ui);
+    patchIndexHtml(dir, ui);
+    patchViteConfig(dir, ui);
 
-      const vite = fs.readFileSync(vitePath, 'utf8');
-      if (ui === 'vanilla') {
-        expect(vite).not.toContain('plugin-react');
-        expect(vite).not.toContain('plugins: [react()]');
-      } else {
-        expect(vite).toContain(`${ui}()`);
-        expect(vite).not.toContain('plugins: [react()]');
-      }
-      // Line endings are preserved, not mixed.
-      expect(vite).toContain('\r\n');
-      expect(vite.replace(/\r\n/g, '')).not.toContain('\n');
-      expect(fs.readFileSync(path.join(dir, 'src/renderer/index.html'), 'utf8')).toContain(
-        '/src/main.ts',
-      );
-    },
-  );
+    const vite = fs.readFileSync(vitePath, 'utf8');
+    if (ui === 'vanilla') {
+      expect(vite).not.toContain('plugin-react');
+      expect(vite).not.toContain('plugins: [react()]');
+    } else {
+      expect(vite).toContain(`${ui}()`);
+      expect(vite).not.toContain('plugins: [react()]');
+    }
+    // Line endings are preserved, not mixed.
+    expect(vite).toContain('\r\n');
+    expect(vite.replace(/\r\n/g, '')).not.toContain('\n');
+    expect(fs.readFileSync(path.join(dir, 'src/renderer/index.html'), 'utf8')).toContain(
+      '/src/main.ts',
+    );
+  });
 });

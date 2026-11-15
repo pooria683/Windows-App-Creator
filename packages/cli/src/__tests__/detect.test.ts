@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectHost, buildCapabilities } from '../lib/detect.js';
+import { detectHost, buildCapabilities, commandExists } from '../lib/detect.js';
 
 describe('detectHost', () => {
   it('returns a valid host shape', () => {
@@ -49,5 +49,16 @@ describe('buildCapabilities', () => {
   it('always returns 3 targets', () => {
     const caps = buildCapabilities(detectHost(), 'electron');
     expect(caps).toHaveLength(3);
+  });
+});
+
+describe('commandExists platform lookup', () => {
+  it('detects a command that exists (uses where on Windows, which elsewhere)', async () => {
+    // `node` must be present in the test process's PATH.
+    expect(await commandExists('node')).toBe(true);
+  });
+
+  it('returns false for a command that does not exist', async () => {
+    expect(await commandExists('winforge-definitely-not-a-real-binary')).toBe(false);
   });
 });

@@ -21,6 +21,18 @@ describe('validateAppName', () => {
     expect(validateAppName('my app')).not.toBe(true);
     expect(validateAppName('node_modules')).not.toBe(true);
   });
+
+  it('rejects Windows reserved device names', () => {
+    for (const name of ['con', 'prn', 'aux', 'nul', 'com1', 'COM9', 'lpt1', 'LPT9']) {
+      expect(validateAppName(name)).not.toBe(true);
+    }
+  });
+
+  it('still accepts names that merely start with a reserved word', () => {
+    for (const name of ['console-app', 'nullify', 'auxiliary', 'com10tool', 'lpt10']) {
+      expect(validateAppName(name)).toBe(true);
+    }
+  });
 });
 
 describe('validatePackageId', () => {

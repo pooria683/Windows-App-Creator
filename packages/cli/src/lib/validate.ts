@@ -23,6 +23,8 @@ export interface ProjectConfig {
 }
 
 const APP_NAME_RE = /^[a-z][a-z0-9-_]*$/i;
+/** Windows reserved device names (case-insensitive, also reserved with an extension). */
+const WINDOWS_RESERVED_DEVICE = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
 const PACKAGE_ID_RE = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/i;
 
 export function validateAppName(name: string): string | true {
@@ -32,7 +34,13 @@ export function validateAppName(name: string): string | true {
     return 'App name must start with a letter and contain only letters, numbers, hyphens or underscores.';
   }
   const reserved = ['node_modules', 'dist', 'build', 'out', 'release', 'src-tauri'];
-  if (reserved.includes(name.toLowerCase())) return `"${name}" is a reserved name.`;
+  const lower = name.toLowerCase();
+  if (reserved.includes(lower)) return `"${name}" is a reserved name.`;
+  // Windows cannot create files/directories with these device names, so a
+  // project called "con" would fail on a Windows checkout or CI runner.
+  if (WINDOWS_RESERVED_DEVICE.test(lower)) {
+    return `"${name}" is a reserved Windows device name (CON, PRN, AUX, NUL, COM1-9, LPT1-9).`;
+  }
   return true;
 }
 

@@ -127,9 +127,12 @@ export async function commandExists(cmd: string): Promise<boolean> {
     await execa(cmd, ['--version'], { stdio: 'ignore' });
     return true;
   } catch {
-    // Some tools don't support --version but still exist; try `which`-style check via execa.
+    // Some tools don't support --version but still exist, so fall back to a
+    // PATH lookup. Windows has `where`; POSIX systems have `which` — using the
+    // wrong one would report every tool as missing.
+    const lookup = process.platform === 'win32' ? 'where' : 'which';
     try {
-      await execa('which', [cmd], { stdio: 'ignore' });
+      await execa(lookup, [cmd], { stdio: 'ignore' });
       return true;
     } catch {
       return false;

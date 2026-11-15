@@ -32,7 +32,21 @@ jobs:
       - run: npm ci || npm install
       - run: npm run build
       - run: npm run typecheck
-      - run: npm test
+      # Test output goes to the job summary so failures are readable from the
+      # Actions UI / API without downloading logs.
+      - name: Run tests
+        shell: bash
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee test-output.txt
+          status=${PIPESTATUS[0]}
+          {
+            echo "## Test output (${{ matrix.os }})"
+            echo '```'
+            tail -c 60000 test-output.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $status
       # Smoke tests run in the runner's temp dir, resolved by Node so the same
       # command works on Windows, macOS and Linux (no hardcoded /tmp).
       - name: Smoke test — scaffold Electron template
