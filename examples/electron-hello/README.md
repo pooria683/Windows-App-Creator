@@ -7,7 +7,7 @@ Built with [WinForge](https://github.com/pooria683/Windows-App-Creator) — Elec
 ## Prerequisites
 
 - Node.js >= 20 (https://nodejs.org)
-- npm (or npm)
+- npm (the package manager you chose)
 - Optional: Wine for Windows cross-builds on macOS/Linux (`brew install --cask wine-stable` / `sudo apt install wine`)
 
 Check your environment:
@@ -32,7 +32,7 @@ npm run dev
 
 This starts Vite (renderer, http://127.0.0.1:5173) and Electron together.
 The renderer has **no Node.js access** — it talks to the main process only
-through the secure `window.winforge` bridge (`src/main/preload.ts`).
+through the secure `window.winforge` bridge (`src/main/preload.cts`).
 
 ## Build
 

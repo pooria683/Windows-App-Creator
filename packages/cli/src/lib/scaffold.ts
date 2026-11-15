@@ -56,6 +56,11 @@ export function templateDirName(cfg: Pick<ProjectConfig, 'template'>): string {
   return `${cfg.template}-react-ts`;
 }
 
+/** How to invoke npm scripts with the chosen package manager (`yarn dev` vs `npm run dev`). */
+export function scriptPrefix(pm: ProjectConfig['packageManager']): string {
+  return pm === 'yarn' ? 'yarn ' : `${pm} run `;
+}
+
 export function buildTokens(cfg: ProjectConfig): Record<string, string> {
   const productName = toProductNameFromDisplay(cfg.appName, cfg.name);
   return {
@@ -69,6 +74,8 @@ export function buildTokens(cfg: ProjectConfig): Record<string, string> {
     TEMPLATE: cfg.template,
     UI_FRAMEWORK: cfg.ui,
     PACKAGE_MANAGER: cfg.packageManager,
+    // Used in generated READMEs so instructions match the chosen package manager.
+    RUN_SCRIPT_PREFIX: scriptPrefix(cfg.packageManager),
     YEAR: String(new Date().getFullYear()),
   };
 }

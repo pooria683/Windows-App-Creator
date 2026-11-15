@@ -8,7 +8,7 @@ Built with [WinForge](https://github.com/pooria683/Windows-App-Creator) — Taur
 
 - Node.js >= 20 (https://nodejs.org)
 - Rust stable via rustup (https://rustup.rs) — **required for Tauri**
-- npm (or npm)
+- npm (the package manager you chose)
 - Linux only: `libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf`
 
 Check your environment:

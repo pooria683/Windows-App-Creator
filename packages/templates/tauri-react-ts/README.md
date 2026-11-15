@@ -8,7 +8,7 @@ Built with [WinForge](https://github.com/pooria683/Windows-App-Creator) — Taur
 
 - Node.js >= 20 (https://nodejs.org)
 - Rust stable via rustup (https://rustup.rs) — **required for Tauri**
-- {{PACKAGE_MANAGER}} (or npm)
+- {{PACKAGE_MANAGER}} (the package manager you chose)
 - Linux only: `libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf`
 
 Check your environment:
@@ -26,7 +26,7 @@ npx winforge doctor
 ## Development (hot reload)
 
 ```bash
-{{PACKAGE_MANAGER}} run dev
+{{RUN_SCRIPT_PREFIX}}dev
 ```
 
 Tauri starts the Vite dev server (http://localhost:1420) and the Rust backend
@@ -35,10 +35,10 @@ together (Rust rebuilds on change; the frontend hot-reloads).
 ## Build
 
 ```bash
-{{PACKAGE_MANAGER}} run build            # current host
-{{PACKAGE_MANAGER}} run build:windows    # Windows NSIS .exe + WiX .msi (Windows only!)
-{{PACKAGE_MANAGER}} run build:macos      # macOS .dmg / .app (macOS only)
-{{PACKAGE_MANAGER}} run build:linux      # Linux AppImage / .deb / .rpm (Linux only)
+{{RUN_SCRIPT_PREFIX}}build            # current host
+{{RUN_SCRIPT_PREFIX}}build:windows    # Windows NSIS .exe + WiX .msi (Windows only!)
+{{RUN_SCRIPT_PREFIX}}build:macos      # macOS .dmg / .app (macOS only)
+{{RUN_SCRIPT_PREFIX}}build:linux      # Linux AppImage / .deb / .rpm (Linux only)
 ```
 
 Artifacts land in `src-tauri/target/release/bundle/` (Tauri default).
@@ -75,10 +75,10 @@ WinForge `docs/signing.md`. **Never commit certificates or passwords.**
 ## Tests & quality
 
 ```bash
-{{PACKAGE_MANAGER}} run test
-{{PACKAGE_MANAGER}} run lint
-{{PACKAGE_MANAGER}} run typecheck
-{{PACKAGE_MANAGER}} run format
+{{RUN_SCRIPT_PREFIX}}test
+{{RUN_SCRIPT_PREFIX}}lint
+{{RUN_SCRIPT_PREFIX}}typecheck
+{{RUN_SCRIPT_PREFIX}}format
 ```
 
 ## Project structure

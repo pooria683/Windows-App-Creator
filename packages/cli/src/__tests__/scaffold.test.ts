@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { scaffoldProject, renderTokens } from '../lib/scaffold.js';
+import { scaffoldProject, renderTokens, scriptPrefix } from '../lib/scaffold.js';
 import type { ProjectConfig } from '../lib/validate.js';
 
 const cfg: ProjectConfig = {
@@ -67,5 +67,31 @@ describe('scaffoldProject', () => {
     const a = scaffoldProject(cfg, dest);
     const b = scaffoldProject(cfg, dest);
     expect(a.sort()).toEqual(b.sort());
+  });
+});
+
+describe('script prefix tokens', () => {
+  it('maps package managers to the right command form', () => {
+    expect(scriptPrefix('npm')).toBe('npm run ');
+    expect(scriptPrefix('pnpm')).toBe('pnpm run ');
+    expect(scriptPrefix('bun')).toBe('bun run ');
+    expect(scriptPrefix('yarn')).toBe('yarn ');
+  });
+
+  it('renders package-manager-accurate README instructions', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'winforge-pm-'));
+    for (const pm of ['npm', 'pnpm', 'yarn', 'bun'] as const) {
+      const dir = path.join(tmp, pm);
+      scaffoldProject({ ...cfg, packageManager: pm }, dir);
+      const readme = fs.readFileSync(path.join(dir, 'README.md'), 'utf8');
+      expect(readme).not.toContain('{{RUN_SCRIPT_PREFIX}}');
+      if (pm === 'yarn') {
+        expect(readme).toContain('yarn dev');
+        expect(readme).not.toContain('yarn run dev');
+      } else {
+        expect(readme).toContain(`${pm} run dev`);
+      }
+    }
+    fs.rmSync(tmp, { recursive: true, force: true });
   });
 });

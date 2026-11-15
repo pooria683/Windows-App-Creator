@@ -7,7 +7,7 @@ Built with [WinForge](https://github.com/pooria683/Windows-App-Creator) — Elec
 ## Prerequisites
 
 - Node.js >= 20 (https://nodejs.org)
-- {{PACKAGE_MANAGER}} (or npm)
+- {{PACKAGE_MANAGER}} (the package manager you chose)
 - Optional: Wine for Windows cross-builds on macOS/Linux (`brew install --cask wine-stable` / `sudo apt install wine`)
 
 Check your environment:
@@ -27,23 +27,23 @@ node /path/to/winforge/packages/cli/dist/index.js doctor
 ## Development (hot reload)
 
 ```bash
-{{PACKAGE_MANAGER}} run dev
+{{RUN_SCRIPT_PREFIX}}dev
 ```
 
 This starts Vite (renderer, http://127.0.0.1:5173) and Electron together.
 The renderer has **no Node.js access** — it talks to the main process only
-through the secure `window.winforge` bridge (`src/main/preload.ts`).
+through the secure `window.winforge` bridge (`src/main/preload.cts`).
 
 ## Build
 
 ```bash
 # Current host only
-{{PACKAGE_MANAGER}} run build
+{{RUN_SCRIPT_PREFIX}}build
 
 # Specific targets
-{{PACKAGE_MANAGER}} run build:windows   # NSIS .exe installer + portable .exe
-{{PACKAGE_MANAGER}} run build:macos     # .dmg + .zip
-{{PACKAGE_MANAGER}} run build:linux     # AppImage + .deb + .rpm
+{{RUN_SCRIPT_PREFIX}}build:windows   # NSIS .exe installer + portable .exe
+{{RUN_SCRIPT_PREFIX}}build:macos     # .dmg + .zip
+{{RUN_SCRIPT_PREFIX}}build:linux     # AppImage + .deb + .rpm
 ```
 
 Artifacts land in `release/`.
@@ -84,10 +84,10 @@ Windows Authenticode, macOS notarization and Linux GPG signing.
 ## Tests & quality
 
 ```bash
-{{PACKAGE_MANAGER}} run test        # Vitest
-{{PACKAGE_MANAGER}} run lint        # ESLint
-{{PACKAGE_MANAGER}} run typecheck   # tsc --noEmit
-{{PACKAGE_MANAGER}} run format      # Prettier
+{{RUN_SCRIPT_PREFIX}}test        # Vitest
+{{RUN_SCRIPT_PREFIX}}lint        # ESLint
+{{RUN_SCRIPT_PREFIX}}typecheck   # tsc --noEmit
+{{RUN_SCRIPT_PREFIX}}format      # Prettier
 ```
 
 ## Project structure

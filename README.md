@@ -271,6 +271,7 @@ Windows-App-Creator/
 │   ├── security.md          # Electron/Tauri hardening, input validation
 │   ├── verification.md      # what was actually tested vs. environment limits
 │   └── cli-reference.md     # every command and flag
+├── LICENSE
 ├── schema/
 │   └── winforge.config.schema.json
 └── .github/workflows/       # monorepo CI + CLI publish
@@ -280,7 +281,7 @@ Architecture diagram and rationale: [`docs/architecture.md`](docs/architecture.m
 
 ## Verified vs. untested
 
-Everything in this repo is typechecked, linted and covered by **73 automated
+Everything in this repo is typechecked, linted and covered by **75 automated
 tests** (CLI unit + binary integration + interactive prompt flows + web UI).
 Both example apps install, typecheck and bundle; all four UI frameworks build.
 
@@ -355,4 +356,7 @@ clipboard.
 
 ## License
 
-MIT. Templates and generated projects are yours to use, modify and ship.
+MIT — see [`LICENSE`](LICENSE). Templates and generated projects are yours to
+use, modify and ship. Nothing here claims anything about installers you build:
+whether they are production-ready depends on your signing, testing and release
+process.
