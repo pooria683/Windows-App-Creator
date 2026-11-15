@@ -1,0 +1,131 @@
+# WinForge monorepo CI — lint, typecheck, tests, and a smoke test that
+# scaffolds a project from each template on all three operating systems.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci || npm install
+      - run: npm run build
+      - run: npm run typecheck
+      # Runs the suite. On failure the output is written to both the job
+      # summary and an artifact, so failures stay diagnosable even when run
+      # logs are not retrievable.
+      - name: Run tests
+        shell: bash
+        run: |
+          set -o pipefail
+          npm test > test-output.txt 2>&1
+          status=$?
+          cat test-output.txt
+          if [ "$status" -ne 0 ]; then
+            {
+              echo "## Test failure (${{ matrix.os }})"
+              echo '```text'
+              tail -c 40000 test-output.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit $status
+
+      - name: Upload test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output-${{ matrix.os }}
+          path: test-output.txt
+          if-no-files-found: ignore
+          retention-days: 7
+
+      # Smoke tests run in the runner's temp dir, resolved by Node so the same
+      # command works on Windows, macOS and Linux (no hardcoded /tmp).
+      - name: Smoke test — scaffold Electron template
+        run: node packages/cli/dist/index.js create "${{ runner.temp }}/wf-electron" --template electron --ui react --pm npm --non-interactive --no-install
+
+      - name: Smoke test — scaffold Tauri template
+        run: node packages/cli/dist/index.js create "${{ runner.temp }}/wf-tauri" --template tauri --ui react --pm npm --non-interactive --no-install
+
+      - name: Smoke test — scaffold a Vue renderer overlay
+        run: node packages/cli/dist/index.js create "${{ runner.temp }}/wf-vue" --template electron --ui vue --pm npm --non-interactive --no-install
+
+      - name: Verify examples match templates
+        run: npm run verify:examples
+
+      - name: Smoke test — generated project typechecks and builds
+        shell: bash
+        run: |
+          cd "${{ runner.temp }}/wf-vue"
+          npm install
+          npm run build:web
+          npm run build:main
+
+      # bash on every runner: the default shell is PowerShell on Windows, where
+      # `> /dev/null` would be a path to a file called null, not a sink.
+      - name: Smoke test — doctor (JSON)
+        shell: bash
+        run: |
+          node packages/cli/dist/index.js doctor --json > doctor.json
+          node -e "const r=require('./doctor.json'); if(r.capabilities.length!==3) process.exit(1); console.log('doctor reported', r.checks.length, 'checks')" 
+
+  # When a runner's tests fail, publish the output as a commit comment so the
+  # failure is readable from the API/PR without downloading run logs.
+  report-failures:
+    name: Report failing test output
+    needs: [verify]
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: test-output-*
+          path: test-outputs
+          merge-multiple: false
+      - name: Post commit comment with failure details
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          {
+            echo "### Test failure details"
+            for f in test-outputs/*/test-output.txt; do
+              [ -f "$f" ] || continue
+              os=$(basename "$(dirname "$f")" | sed 's/^test-output-//')
+              echo ""
+              echo "#### $os"
+              echo '```text'
+              tail -c 6000 "$f"
+              echo '```'
+            done
+          } > body.md
+          jq -Rs '{body: .}' body.md > payload.json
+          gh api --method POST \
+            "repos/${{ github.repository }}/commits/${{ github.sha }}/comments" \
+            --input payload.json || echo "::warning::could not post commit comment"
+          echo "--- preview ---"
+          head -c 4000 body.md

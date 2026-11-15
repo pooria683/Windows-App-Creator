@@ -1,0 +1,13 @@
+// ESLint flat config — renderer + main process (TypeScript).
+export default [
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+    },
+    rules: {
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  },
+];

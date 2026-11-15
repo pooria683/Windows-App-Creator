@@ -1,0 +1,99 @@
+# {{APP_DISPLAY_NAME}}
+
+{{DESCRIPTION}}
+
+Built with [WinForge](https://github.com/pooria683/Windows-App-Creator) — Tauri + React + TypeScript.
+
+## Prerequisites
+
+- Node.js >= 20 (https://nodejs.org)
+- Rust stable via rustup (https://rustup.rs) — **required for Tauri**
+- {{PACKAGE_MANAGER}} (the package manager you chose)
+- Linux only: `libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf`
+
+Check your environment:
+
+```bash
+npx winforge doctor
+```
+
+## Setup
+
+```bash
+{{PACKAGE_MANAGER}} install
+```
+
+## Development (hot reload)
+
+```bash
+{{RUN_SCRIPT_PREFIX}}dev
+```
+
+Tauri starts the Vite dev server (http://localhost:1420) and the Rust backend
+together (Rust rebuilds on change; the frontend hot-reloads).
+
+## Build
+
+```bash
+{{RUN_SCRIPT_PREFIX}}build            # current host
+{{RUN_SCRIPT_PREFIX}}build:windows    # Windows NSIS .exe + WiX .msi (Windows only!)
+{{RUN_SCRIPT_PREFIX}}build:macos      # macOS .dmg / .app (macOS only)
+{{RUN_SCRIPT_PREFIX}}build:linux      # Linux AppImage / .deb / .rpm (Linux only)
+```
+
+Artifacts land in `src-tauri/target/release/bundle/` (Tauri default).
+
+> **Windows builds from macOS/Linux:** Tauri/Rust **cannot** cross-compile
+> Windows binaries from macOS/Linux. Windows `.exe`/`.msi` MUST be built on
+> Windows — use GitHub Actions (`winforge ci`, `windows-latest` runner).
+
+## Package a single format
+
+```bash
+npx winforge package --format exe   # Windows NSIS installer (Windows/CI only)
+npx winforge package --format msi   # Windows WiX MSI (Windows/CI only)
+npx winforge package --format dmg   # macOS disk image
+```
+
+## CI — build on GitHub Actions
+
+```bash
+npx winforge ci
+git add .github/workflows/build.yml
+git commit -m "Add WinForge CI workflow"
+git push
+```
+
+The workflow builds Windows (`.exe`/`.msi`), macOS (`.dmg`) and Linux
+(`.AppImage`/`.deb`/`.rpm`) on native runners and uploads all artifacts.
+
+## Signing (optional, disabled by default)
+
+Unsigned installers trigger OS warnings. See `scripts/sign-windows.md` and
+WinForge `docs/signing.md`. **Never commit certificates or passwords.**
+
+## Tests & quality
+
+```bash
+{{RUN_SCRIPT_PREFIX}}test
+{{RUN_SCRIPT_PREFIX}}lint
+{{RUN_SCRIPT_PREFIX}}typecheck
+{{RUN_SCRIPT_PREFIX}}format
+```
+
+## Project structure
+
+```
+src/
+  renderer/   React + Vite frontend (Tauri IPC only, no Node access)
+  shared/     Types shared with the Rust backend
+src-tauri/
+  src/        Rust backend (commands, main)
+  capabilities/  Tauri permission capabilities
+  icons/      App icons (generate with `npx tauri icon`)
+tests/        Vitest unit tests
+```
+
+## License
+
+MIT — contact {{AUTHOR}}.

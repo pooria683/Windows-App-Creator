@@ -1,0 +1,12 @@
+node_modules/
+dist/
+release/
+src-tauri/target/
+src-tauri/WixTools/
+*.local
+.DS_Store
+.env
+.env.*
+!.env.example
+coverage/
+*.tsbuildinfo

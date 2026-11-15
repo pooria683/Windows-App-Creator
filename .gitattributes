@@ -1,0 +1,33 @@
+# Normalise line endings so checkouts are identical on every OS.
+# Windows (core.autocrlf=true) would otherwise convert text files to CRLF,
+# which breaks the templates' exact-match string patching and produces
+# differing generated projects.
+* text=auto eol=lf
+
+# Shell scripts must never have CRLF.
+*.sh text eol=lf
+
+# Windows-specific files keep CRLF by convention.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary assets: never convert, never diff as text.
+*.png binary
+*.ico binary
+*.icns binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.zip binary
+*.gz binary
+*.pfx binary
+*.p12 binary
+
+# Lockfile and generated examples are regenerated, not hand-edited.
+package-lock.json -diff linguist-generated
+examples/**/package-lock.json -diff linguist-generated

@@ -1,0 +1,143 @@
+# Standalone WinForge CI template — copy to .github/workflows/build.yml
+# or generate a project-specific version automatically:
+#
+#     winforge ci                # unsigned builds (default)
+#     winforge ci --release      # + draft GitHub Release on v* tags
+#     winforge ci --signing      # + code-signing secrets (see docs/signing.md)
+#
+# Runners and outputs:
+#   windows-latest -> NSIS .exe installer, portable .exe (optional .msi)
+#   macos-latest   -> .dmg
+#   ubuntu-latest  -> .AppImage, .deb, .rpm
+#
+# Signing is DISABLED here on purpose. Unsigned installers trigger
+# SmartScreen / Gatekeeper warnings and are not production-ready.
+
+name: Build desktop apps
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows:
+    name: Windows (.exe)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      # Tauri projects only — remove for Electron.
+      - name: Install Rust (Tauri only)
+        if: hashFiles('src-tauri/Cargo.toml') != ''
+        uses: dtolnay/rust-toolchain@stable
+      - run: npm ci || npm install
+      - name: Build (Electron)
+        if: hashFiles('src-tauri/Cargo.toml') == ''
+        run: npx electron-builder --win nsis portable --publish never
+      - name: Build (Tauri)
+        if: hashFiles('src-tauri/Cargo.toml') != ''
+        run: npx tauri build --bundles nsis
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ github.sha }}
+          path: |
+            release/*
+            src-tauri/target/release/bundle/**/*
+          if-no-files-found: error
+
+  build-macos:
+    name: macOS (.dmg)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install Rust (Tauri only)
+        if: hashFiles('src-tauri/Cargo.toml') != ''
+        uses: dtolnay/rust-toolchain@stable
+      - run: npm ci || npm install
+      - name: Build (Electron)
+        if: hashFiles('src-tauri/Cargo.toml') == ''
+        run: npx electron-builder --mac dmg zip --x64 --arm64 --publish never
+      - name: Build (Tauri)
+        if: hashFiles('src-tauri/Cargo.toml') != ''
+        run: rustup target add x86_64-apple-darwin aarch64-apple-darwin && npx tauri build --target universal-apple-darwin --bundles dmg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ github.sha }}
+          path: |
+            release/*
+            src-tauri/target/release/bundle/**/*
+          if-no-files-found: error
+
+  build-linux:
+    name: Linux (.AppImage / .deb / .rpm)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install Tauri Linux dependencies
+        if: hashFiles('src-tauri/Cargo.toml') != ''
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev \
+            librsvg2-dev patchelf rpm
+      - name: Install Rust (Tauri only)
+        if: hashFiles('src-tauri/Cargo.toml') != ''
+        uses: dtolnay/rust-toolchain@stable
+      - run: npm ci || npm install
+      - name: Build (Electron)
+        if: hashFiles('src-tauri/Cargo.toml') == ''
+        run: npx electron-builder --linux AppImage deb rpm --publish never
+      - name: Build (Tauri)
+        if: hashFiles('src-tauri/Cargo.toml') != ''
+        run: npx tauri build --bundles appimage,deb,rpm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ github.sha }}
+          path: |
+            release/*
+            src-tauri/target/release/bundle/**/*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release (draft)
+    needs: [build-windows, build-macos, build-linux]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: |
+            artifacts/**/*.exe
+            artifacts/**/*.msi
+            artifacts/**/*.dmg
+            artifacts/**/*.AppImage
+            artifacts/**/*.deb
+            artifacts/**/*.rpm

@@ -1,0 +1,11 @@
+node_modules
+dist
+build
+out
+release
+coverage
+package-lock.json
+packages/cli/templates
+packages/templates/**/src-tauri/target
+examples/*/dist
+examples/*/release
