@@ -20,6 +20,8 @@ import path from 'node:path';
 import { Command } from 'commander';
 import { log } from '../lib/logger.js';
 import { loadConfig } from '../lib/config.js';
+import { scriptCommandLine } from '../lib/runner.js';
+import type { PackageManager } from '../lib/validate.js';
 
 export interface WorkflowOptions {
   appName: string;
@@ -71,10 +73,7 @@ function installSteps(pm: string): string[] {
 
 /** How to run the project's build script with the chosen package manager. */
 function runCmd(pm: string, script: string): string {
-  if (pm === 'yarn') return `yarn ${script}`;
-  if (pm === 'pnpm') return `pnpm run ${script}`;
-  if (pm === 'bun') return `bun run ${script}`;
-  return `npm run ${script}`;
+  return scriptCommandLine(pm as PackageManager, script);
 }
 
 /** electron-builder output directory (see template package.json → build.directories). */

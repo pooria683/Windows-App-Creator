@@ -15,6 +15,14 @@ export const PM_COMMANDS: Record<
   bun: { install: ['install'], run: (s) => ['run', s], exec: 'bunx' },
 };
 
+/**
+ * How to show a script invocation to the user, matching their package manager
+ * (`yarn dev` vs `npm run dev`). Used in guidance messages, not for execution.
+ */
+export function scriptCommandLine(pm: PackageManager, script: string): string {
+  return pm === 'yarn' ? `yarn ${script}` : `${pm} run ${script}`;
+}
+
 export interface RunOptions {
   cwd: string;
   env?: Record<string, string>;

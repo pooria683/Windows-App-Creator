@@ -7,7 +7,7 @@ import { Command } from 'commander';
 import { log } from '../lib/logger.js';
 import { loadConfig } from '../lib/config.js';
 import { detectHost, buildCapabilities } from '../lib/detect.js';
-import { runScript } from '../lib/runner.js';
+import { runScript, scriptCommandLine } from '../lib/runner.js';
 import type { BuildTarget } from '../lib/validate.js';
 
 const VALID_TARGETS: BuildTarget[] = ['windows', 'macos', 'linux', 'all'];
@@ -48,11 +48,13 @@ export function registerBuild(program: Command): void {
         const script = `build:${t}`;
         try {
           await runScript(config.packageManager, script, { cwd: projectRoot });
-          log.success(`Built ${t}. Artifacts are in the project's release/ directory.`);
+          log.success(
+            `Built ${t}. Artifacts are in ${config.template === 'tauri' ? 'src-tauri/target/release/bundle/' : 'release/'}.`,
+          );
         } catch (err) {
           log.error(`Build for ${t} failed: ${(err as Error).message}`);
           log.dim(
-            `  Tip: run \`${config.packageManager} run ${script}\` directly to see full output.`,
+            `  Tip: run ${scriptCommandLine(config.packageManager, script)} directly to see full output.`,
           );
           process.exit(1);
         }

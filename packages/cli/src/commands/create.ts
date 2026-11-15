@@ -12,7 +12,7 @@ import { log } from '../lib/logger.js';
 import { validateProjectConfig, toSlug, type ProjectConfig } from '../lib/validate.js';
 import { scaffoldProject } from '../lib/scaffold.js';
 import { promptProjectConfig } from '../lib/prompts.js';
-import { installDeps } from '../lib/runner.js';
+import { installDeps, scriptCommandLine } from '../lib/runner.js';
 
 interface CreateOptions {
   template?: string;
@@ -121,7 +121,9 @@ export function registerCreate(program: Command): void {
       const rel = path.relative(process.cwd(), destDir) || '.';
       log.title('Next steps');
       log.dim(`  cd ${rel}`);
-      log.dim(`  ${cfg.packageManager} run dev                # development with hot reload`);
+      log.dim(
+        `  ${scriptCommandLine(cfg.packageManager, 'dev')}                # development with hot reload`,
+      );
       log.dim(`  winforge build --target windows          # Windows .exe / installer`);
       log.dim(`  winforge ci                              # GitHub Actions workflow`);
       log.dim(`  winforge doctor                          # check your environment`);

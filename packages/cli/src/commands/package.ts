@@ -6,7 +6,7 @@ import { Command } from 'commander';
 import { log } from '../lib/logger.js';
 import { loadConfig } from '../lib/config.js';
 import { detectHost, buildCapabilities } from '../lib/detect.js';
-import { runScript } from '../lib/runner.js';
+import { runScript, scriptCommandLine } from '../lib/runner.js';
 import type { PackageFormat } from '../lib/validate.js';
 
 const VALID_FORMATS: PackageFormat[] = ['exe', 'msi', 'dmg', 'appimage', 'deb', 'rpm'];
@@ -48,7 +48,7 @@ export function registerPackage(program: Command): void {
       }
 
       const script = `package:${format}`;
-      log.info(`Running ${config.packageManager} run ${script}…`);
+      log.info(`Running ${scriptCommandLine(config.packageManager, script)}…`);
       try {
         await runScript(config.packageManager, script, { cwd: projectRoot });
         log.success(`Packaged .${format}. See release/ for the installer.`);
