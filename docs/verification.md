@@ -71,6 +71,11 @@ OS:
    series). On a cold `windows-latest` runner that exceeded the test timeout.
    Existence checks now use a single PATH lookup and all checks run
    concurrently; `doctor --json` dropped from ~5s to ~0.4s.
+6. **A smoke step redirected to `/dev/null`.** The default shell on Windows
+   runners is PowerShell, where that is a _file_ named null, so the step failed
+   at the shell level. Steps that use POSIX syntax now declare `shell: bash`
+   (Git Bash is preinstalled on all runners), and the doctor smoke test now
+   parses its JSON output instead of discarding it.
 
 The CI workflow's own smoke tests also no longer hardcode `/tmp` (they use
 `${{ runner.temp }}`), and now additionally scaffold a Vue project, install it,

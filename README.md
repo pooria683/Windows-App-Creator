@@ -283,6 +283,7 @@ Architecture diagram and rationale: [`docs/architecture.md`](docs/architecture.m
 
 Everything in this repo is typechecked, linted and covered by **96 automated
 tests** (CLI unit + binary integration + interactive prompt flows + web UI).
+The suite runs on `ubuntu-latest`, `macos-latest` **and** `windows-latest`.
 Both example apps install, typecheck and bundle; all four UI frameworks build.
 
 What is **not** verified is anything that needs Electron/Windows tooling this
