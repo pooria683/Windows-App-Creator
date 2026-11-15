@@ -29,7 +29,8 @@ npx winforge doctor
 {{PACKAGE_MANAGER}} run dev
 ```
 
-Tauri starts the Vite dev server (http://localhost:1420) and the Rust backend together.
+Tauri starts the Vite dev server (http://localhost:1420) and the Rust backend
+together (Rust rebuilds on change; the frontend hot-reloads).
 
 ## Build
 

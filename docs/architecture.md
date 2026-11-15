@@ -21,6 +21,7 @@ need a Windows desktop app" into three commands: `create`, `dev`, `build`.
 │                       ├── detect.ts     host OS/arch + capability matrix     │
 │                       ├── config.ts     winforge.config.json load/defaults   │
 │                       ├── scaffold.ts   copy template + {{TOKEN}} render     │
+│                       ├── renderers.ts  Vue/Svelte/vanilla overlay patches   │
 │                       ├── runner.ts     npm/pnpm/yarn/bun command mapping    │
 │                       ├── prompts.ts    interactive setup                    │
 │                       └── logger.ts     chalk output                         │
@@ -31,9 +32,12 @@ need a Windows desktop app" into three commands: `create`, `dev`, `build`.
 │ packages/templates            │   │ packages/web-ui (React + Vite)           │
 │ ├── electron-react-ts         │   │ • validates name / package id            │
 │ ├── tauri-react-ts            │   │ • builds the exact CLI command to copy   │
-│ └── github-actions/build.yml  │   │ • target matrix: local vs. CI            │
-└───────────────┬───────────────┘   └──────────────────────────────────────────┘
+│ ├── renderers/{vue,svelte,    │   │ • target matrix: local vs. CI            │
+│ │   vanilla}  (UI overlays)   │   └──────────────────────────────────────────┘
+│ └── github-actions/build.yml  │
+└───────────────┬───────────────┘
                 │ scaffolded project (own git repo, own dependencies)
+                │ + renderer overlay when UI != React
                 ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                         Generated application project                        │
@@ -65,6 +69,15 @@ the tree, substitutes a fixed, auditable token set (`APP_NAME`, `PRODUCT_NAME`,
 `PACKAGE_ID`, `VERSION`, …) in text files, and byte-copies binaries (icons).
 That makes scaffolding idempotent and trivially testable — see
 `packages/cli/src/__tests__/scaffold.test.ts`.
+
+**Non-React UIs are overlays, not stubs.** Choosing Vue, Svelte or vanilla
+copies a complete renderer entry from `packages/templates/renderers/<ui>/files`
+and patches `package.json`, `vite.config.ts`, `tsconfig.json` and `index.html`
+(`lib/renderers.ts`). React packages are removed, the framework's dependencies
+and Vite plugin are added, and the main process/preload/IPC layer stays
+identical — so the security model does not change with the UI framework. Each
+variant was installed and built during development (see
+[`verification.md`](verification.md)).
 
 **The generated project is standalone.** After `create` finishes, the CLI is
 only needed for convenience commands. Everything runs through
