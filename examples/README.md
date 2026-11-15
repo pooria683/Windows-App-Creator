@@ -9,10 +9,10 @@ npm run build           # rebuild the CLI first
 npm run create:example  # regenerate both projects
 ```
 
-| Project | Template | What demonstrates |
-| --- | --- | --- |
+| Project                            | Template              | What demonstrates                                                                                           |
+| ---------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------- |
 | [`electron-hello`](electron-hello) | Electron + React + TS | Secure preload/contextBridge, electron-builder NSIS + portable config, Windows cross-build from macOS/Linux |
-| [`tauri-hello`](tauri-hello) | Tauri + React + TS | Rust command IPC, capabilities file, NSIS + WiX MSI bundle config |
+| [`tauri-hello`](tauri-hello)       | Tauri + React + TS    | Rust command IPC, capabilities file, NSIS + WiX MSI bundle config                                           |
 
 ## Try one
 

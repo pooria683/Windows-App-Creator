@@ -7,13 +7,13 @@ validates everything it writes.
 
 ## Electron template
 
-| Setting | Value | Why |
-| --- | --- | --- |
-| `nodeIntegration` | `false` | Renderer JavaScript cannot `require()` Node modules — the classic Electron RCE path. |
-| `contextIsolation` | `true` | Preload and page share no JS context; the page cannot tamper with the preload. |
-| `sandbox` | `true` | The renderer runs in a Chromium sandbox. |
-| `preload` | `preload.cts` (CommonJS) | Sandboxed preloads cannot be ES modules — the template compiles this one file to CJS. |
-| Exposed API | `contextBridge.exposeInMainWorld('winforge', …)` | Exactly two functions: `getAppInfo()` and `openExternal(url)`. Never `ipcRenderer`, `fs` or `shell`. |
+| Setting            | Value                                            | Why                                                                                                  |
+| ------------------ | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `nodeIntegration`  | `false`                                          | Renderer JavaScript cannot `require()` Node modules — the classic Electron RCE path.                 |
+| `contextIsolation` | `true`                                           | Preload and page share no JS context; the page cannot tamper with the preload.                       |
+| `sandbox`          | `true`                                           | The renderer runs in a Chromium sandbox.                                                             |
+| `preload`          | `preload.cts` (CommonJS)                         | Sandboxed preloads cannot be ES modules — the template compiles this one file to CJS.                |
+| Exposed API        | `contextBridge.exposeInMainWorld('winforge', …)` | Exactly two functions: `getAppInfo()` and `openExternal(url)`. Never `ipcRenderer`, `fs` or `shell`. |
 
 **IPC hardening**
 
@@ -26,7 +26,7 @@ validates everything it writes.
   is set in the packaged renderer. The dev-only CSP relaxation for Vite HMR is
   applied through `session.webRequest` and never ships.
 
-**What is deliberately *not* exposed**
+**What is deliberately _not_ exposed**
 
 No filesystem, shell, child-process, clipboard-write or auto-updater API. Add
 each one explicitly (and validate its arguments) if your app needs it — the
@@ -53,14 +53,14 @@ instead of `innerHTML`.
 
 Nothing is written until every field validates (`lib/validate.ts`):
 
-| Field | Rule |
-| --- | --- |
-| `name` | `^[a-z][a-z0-9-_]*$`, 2–64 chars, not reserved (`dist`, `release`, …) |
-| `appName` | 1–80 chars; rejects `< > " ' \` $ \\ { } \| ; & / : * ?` and control chars |
-| `packageId` | reverse-DNS, ≤ 128 chars |
-| `version` | semver, no leading `v` (rejected explicitly — `semver.valid()` would coerce it) |
-| `author` | 1–120 chars, no shell metacharacters |
-| `description` | ≤ 280 chars |
+| Field         | Rule                                                                            |
+| ------------- | ------------------------------------------------------------------------------- |
+| `name`        | `^[a-z][a-z0-9-_]*$`, 2–64 chars, not reserved (`dist`, `release`, …)           |
+| `appName`     | 1–80 chars; rejects `< > " ' \` $ \\ { } \| ; & / : * ?` and control chars      |
+| `packageId`   | reverse-DNS, ≤ 128 chars                                                        |
+| `version`     | semver, no leading `v` (rejected explicitly — `semver.valid()` would coerce it) |
+| `author`      | 1–120 chars, no shell metacharacters                                            |
+| `description` | ≤ 280 chars                                                                     |
 
 `winforge.config.json` is re-validated on every `dev`/`build`/`package`/`ci`
 run, so a hand-edited file cannot silently produce a broken build.

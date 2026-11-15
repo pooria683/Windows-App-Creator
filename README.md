@@ -24,6 +24,7 @@ and Linux** artifacts on native runners.
 - [What you get](#what-you-get)
 - [Windows builds from macOS/Linux](#windows-builds-from-macoslinux)
 - [Code signing](#code-signing)
+- [Verified vs. untested](#verified-vs-untested)
 - [Repository layout](#repository-layout)
 - [Development](#development)
 - [FAQ](#faq)
@@ -268,6 +269,7 @@ Windows-App-Creator/
 │   ├── windows-builds.md    # how Windows installers are produced
 │   ├── signing.md           # Authenticode, notarization, GPG
 │   ├── security.md          # Electron/Tauri hardening, input validation
+│   ├── verification.md      # what was actually tested vs. environment limits
 │   └── cli-reference.md     # every command and flag
 ├── schema/
 │   └── winforge.config.schema.json
@@ -275,6 +277,18 @@ Windows-App-Creator/
 ```
 
 Architecture diagram and rationale: [`docs/architecture.md`](docs/architecture.md).
+
+## Verified vs. untested
+
+Everything in this repo is typechecked, linted and covered by **73 automated
+tests** (CLI unit + binary integration + interactive prompt flows + web UI).
+Both example apps install, typecheck and bundle; all four UI frameworks build.
+
+What is **not** verified is anything that needs Electron/Windows tooling this
+sandbox cannot download — producing the actual `.exe`, `.msi`, `.dmg`, signing
+them, and running the installer on Windows. Those steps are documented and
+wired into CI, but you must run them and test the result. Details and
+reproduction commands: [`docs/verification.md`](docs/verification.md).
 
 ---
 

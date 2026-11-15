@@ -10,20 +10,20 @@ Run `winforge <command> --help` for the authoritative flag list.
 
 Scaffold a project from a template, then install dependencies.
 
-| Option                    | Description                                   |
-| ------------------------- | --------------------------------------------- |
-| `--template <kind>`       | `electron` (default) or `tauri`               |
-| `--ui <framework>`        | `react` (default), `vue`, `svelte`, `vanilla` |
-| `--pm <manager>`          | `npm` (default), `pnpm`, `yarn`, `bun`        |
-| `--app-name <name>`       | Display name (defaults to the project name)   |
-| `--package-id <id>`       | Reverse-DNS id (default `com.example.<name>`) |
-| `--description <text>`    | App description                               |
-| `--author <name>`         | Author / publisher                            |
-| `--version <semver>`      | Initial version (default `0.1.0`)             |
-| `--non-interactive`       | Skip prompts, use flags and defaults          |
-| `--no-install`            | Don't run the package manager                 |
-| `--force`                 | Allow scaffolding into a non-empty directory  |
-| `--templates-root <path>` | Advanced: use templates from a custom path    |
+| Option                    | Description                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------------- |
+| `--template <kind>`       | `electron` (default) or `tauri`                                                     |
+| `--ui <framework>`        | `react` (default), `vue`, `svelte`, `vanilla`                                       |
+| `--pm <manager>`          | `npm` (default), `pnpm`, `yarn`, `bun`                                              |
+| `--app-name <name>`       | Display name (defaults to the project name)                                         |
+| `--package-id <id>`       | Reverse-DNS id (default `com.example.<name>`)                                       |
+| `--description <text>`    | App description                                                                     |
+| `--author <name>`         | Author / publisher                                                                  |
+| `--app-version <semver>`  | Initial app version (default `0.1.0`) — `--version` is reserved for the CLI version |
+| `--non-interactive`       | Skip prompts, use flags and defaults                                                |
+| `--no-install`            | Don't run the package manager                                                       |
+| `--force`                 | Allow scaffolding into a non-empty directory                                        |
+| `--templates-root <path>` | Advanced: use templates from a custom path                                          |
 
 `<project-name>` may be a path; the app name is derived from its last segment.
 
